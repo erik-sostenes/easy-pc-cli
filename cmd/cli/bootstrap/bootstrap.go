@@ -3,7 +3,8 @@
 package bootstrap
 
 import (
-	"github.com/erik-sostenes/easy-pc-cli/internal/context/cli/infrastructure/input/cli"
+	"github.com/erik-sostenes/easy-pc-cli/internal/context/offer/business/application"
+	"github.com/erik-sostenes/easy-pc-cli/internal/context/offer/infrastructure/input/cli"
 	"log"
 	"os"
 )
@@ -26,8 +27,10 @@ func Execute(args []string) error {
 		os.Exit(1)
 	}
 
+	offerFinder := application.NewOfferFinder()
+
 	cmds := []Runner{
-		cli.NewProductFlags(),
+		cli.NewProductFlags(offerFinder),
 	}
 
 	subcommand := os.Args[1]

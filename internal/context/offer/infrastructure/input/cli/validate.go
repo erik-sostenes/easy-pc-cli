@@ -11,12 +11,12 @@ var _ flag.Value = &Validate{}
 
 // Validate struct that stores a value of a flag to define our own validations
 type Validate struct {
-	value string
+	value *string
 }
 
 // String method that returns the value of flag
 func (v Validate) String() string {
-	return v.value
+	return *v.value
 }
 
 // Set method that validates the input value of a flag
@@ -26,6 +26,6 @@ func (v Validate) Set(value string) (err error) {
 		return
 	}
 
-	v.value = value
+	*v.value = value
 	return
 }
