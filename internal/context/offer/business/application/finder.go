@@ -37,13 +37,15 @@ var _ ports.OfferFinder[OfferQuery] = &OfferFinder{}
 
 type OfferFinder struct {
 	ports.OfferScraper
+	ports.HttpRequester
 	queries map[string]string
 }
 
-func NewOfferFinder(scraper ports.OfferScraper) OfferFinder {
+func NewOfferFinder(scraper ports.OfferScraper, requester ports.HttpRequester) OfferFinder {
 	return OfferFinder{
-		OfferScraper: scraper,
-		queries:      make(map[string]string),
+		OfferScraper:  scraper,
+		HttpRequester: requester,
+		queries:       make(map[string]string),
 	}
 }
 
@@ -67,12 +69,12 @@ func (o *OfferFinder) Find(query OfferQuery) error {
 	o.queries["available"] = query.Available
 	o.queries["delivery"] = query.Delivery
 
-	_, err := o.OfferScraper.Scraping(o.queries, query.Urls)
+	offers, err := o.OfferScraper.Scraping(o.queries, query.Urls)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	return o.HttpRequester.Request(offers)
 }
 
 func (o *OfferFinder) ensureUrlIsValid(urls []string) error {
@@ -81,6 +83,5 @@ func (o *OfferFinder) ensureUrlIsValid(urls []string) error {
 			return fmt.Errorf("offer v %s is not valid", v)
 		}
 	}
-
 	return nil
 }

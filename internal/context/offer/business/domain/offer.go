@@ -21,6 +21,7 @@ type (
 		Amount float64
 	}
 
+	// Offer represents an object domain
 	Offer struct {
 		Title              string
 		OriginalPrice      float64
@@ -32,7 +33,7 @@ type (
 		DeliveryIsFree     string
 		Sale               Sale
 		Rating             Rating
-		RatingOpinion      []RatingOpinion
+		RatingOpinions     []RatingOpinion
 		Opinions           []string
 		Category           Category
 	}

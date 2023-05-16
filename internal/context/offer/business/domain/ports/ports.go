@@ -16,7 +16,14 @@ type (
 
 	// OfferScraper interface that represents an output port that defines the contracts of how the adapters communicate
 	OfferScraper interface {
-		// Scraping method that receives a domain.offer with query selectors to search the data of an offer by colly
+		// Scraping method that receives a map with query selectors to search the data of an offer by colly
 		Scraping(map[string]string, []string) (domain.Offers, error)
+	}
+
+	// HttpRequester interface that represents an output port that defines the contracts of how the adapters communicate
+	// port in charge of making requests to the set of injected endpoints at runtime
+	HttpRequester interface {
+		// Request method that receives a domain.Offers to send the request the set of endpoints
+		Request(domain.Offers) error
 	}
 )

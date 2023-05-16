@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/erik-sostenes/easy-pc-cli/internal/context/offer/business/application"
 	"github.com/erik-sostenes/easy-pc-cli/internal/context/offer/infrastructure/input/cli"
+	"github.com/erik-sostenes/easy-pc-cli/internal/context/offer/infrastructure/output/http"
 	"github.com/erik-sostenes/easy-pc-cli/internal/context/offer/infrastructure/output/scraping"
 	"github.com/erik-sostenes/easy-pc-cli/internal/context/shared/infrastruture/colly"
 	"os"
@@ -29,15 +30,14 @@ func Execute(args []string) error {
 		return errors.New("website subcommands were expected")
 	}
 
-	colly := colly.NewCollyClient()
-	offerFinder := application.NewOfferFinder(scraping.NewOfferScraper(*colly))
+	offerFinder := application.NewOfferFinder(
+		scraping.NewOfferScraper(*colly.NewCollyClient()),
+		http.Requester{},
+	)
 
 	switch os.Args[1] {
 	case "website":
-		offer := cli.NewOfferFlags(offerFinder)
-		if err := offer.Run(); err != nil {
-			return err
-		}
+		return cli.NewOfferFlags(offerFinder).Run()
 	default:
 		return fmt.Errorf("%s command no fount", os.Args[1])
 	}
