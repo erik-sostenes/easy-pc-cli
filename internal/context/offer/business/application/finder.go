@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/erik-sostenes/easy-pc-cli/internal/context/offer/business/domain/ports"
 	"github.com/erik-sostenes/easy-pc-cli/internal/context/shared/domain/bus/query"
-	"regexp"
+	"net/url"
 )
 
 // OfferQuery implements the query.Query interface
@@ -12,6 +12,9 @@ var _ query.Query = &OfferQuery{}
 
 type OfferQuery struct {
 	Website       string
+	Container     string
+	Item          string
+	CategoryId    string
 	Category      string
 	Title         string
 	OriginalPrice string
@@ -32,28 +35,52 @@ func (o OfferQuery) QueryId() string {
 // OfferFinder implements the ports.OfferFinder interface
 var _ ports.OfferFinder[OfferQuery] = &OfferFinder{}
 
-type OfferFinder struct{}
+type OfferFinder struct {
+	ports.OfferScraper
+	queries map[string]string
+}
 
-func NewOfferFinder() OfferFinder {
-	return OfferFinder{}
+func NewOfferFinder(scraper ports.OfferScraper) OfferFinder {
+	return OfferFinder{
+		OfferScraper: scraper,
+		queries:      make(map[string]string),
+	}
 }
 
 // Find method that receives a query, validates the data and communicates with the ports.OfferScraper port
-func (o *OfferFinder) Find(query OfferQuery) (err error) {
-	if ok, err := o.ensureUrlIsValid(query.Urls); !ok {
+func (o *OfferFinder) Find(query OfferQuery) error {
+	if err := o.ensureUrlIsValid(query.Urls); err != nil {
 		return err
 	}
-	return
+
+	o.queries["website"] = query.Website
+	o.queries["container"] = query.Container
+	o.queries["item"] = query.Item
+	o.queries["category_id"] = query.CategoryId
+	o.queries["category"] = query.Category
+	o.queries["title"] = query.Title
+	o.queries["original_price"] = query.OriginalPrice
+	o.queries["discounted"] = query.Discounted
+	o.queries["percentage"] = query.Percentage
+	o.queries["offer_url"] = query.OfferUrl
+	o.queries["offer_day"] = query.OfferDay
+	o.queries["available"] = query.Available
+	o.queries["delivery"] = query.Delivery
+
+	_, err := o.OfferScraper.Scraping(o.queries, query.Urls)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (o *OfferFinder) ensureUrlIsValid(urls []string) (bool, error) {
-	regexExp := "(?:https?:\\/\\/)?(?:[\\w]+\\.)(?:\\.?[\\w]{2,})(\\/[\\w]*)*(\\.[\\w]+)"
-
-	for _, url := range urls {
-		if matched, err := regexp.MatchString(regexExp, url); err != nil || !matched {
-			return false, fmt.Errorf("offer url %s is not valid", url)
+func (o *OfferFinder) ensureUrlIsValid(urls []string) error {
+	for _, v := range urls {
+		if _, err := url.ParseRequestURI(v); err != nil {
+			return fmt.Errorf("offer v %s is not valid", v)
 		}
 	}
 
-	return true, nil
+	return nil
 }

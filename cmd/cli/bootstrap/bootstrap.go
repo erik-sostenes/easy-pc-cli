@@ -3,9 +3,12 @@
 package bootstrap
 
 import (
+	"errors"
+	"fmt"
 	"github.com/erik-sostenes/easy-pc-cli/internal/context/offer/business/application"
 	"github.com/erik-sostenes/easy-pc-cli/internal/context/offer/infrastructure/input/cli"
-	"log"
+	"github.com/erik-sostenes/easy-pc-cli/internal/context/offer/infrastructure/output/scraping"
+	"github.com/erik-sostenes/easy-pc-cli/internal/context/shared/infrastruture/colly"
 	"os"
 )
 
@@ -23,25 +26,20 @@ type Runner interface {
 // Execute method that initializes the program startup with all dependencies initialized
 func Execute(args []string) error {
 	if len(args) < 1 {
-		log.Println("website subcommands were expected")
-		os.Exit(1)
+		return errors.New("website subcommands were expected")
 	}
 
-	offerFinder := application.NewOfferFinder()
+	colly := colly.NewCollyClient()
+	offerFinder := application.NewOfferFinder(scraping.NewOfferScraper(*colly))
 
-	cmds := []Runner{
-		cli.NewProductFlags(offerFinder),
-	}
-
-	subcommand := os.Args[1]
-
-	for _, cmd := range cmds {
-		if cmd.Name() == subcommand {
-			if err := cmd.Run(); err != nil {
-				return err
-			}
+	switch os.Args[1] {
+	case "website":
+		offer := cli.NewOfferFlags(offerFinder)
+		if err := offer.Run(); err != nil {
+			return err
 		}
+	default:
+		return fmt.Errorf("%s command no fount", os.Args[1])
 	}
-
 	return nil
 }

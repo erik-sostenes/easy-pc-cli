@@ -10,24 +10,12 @@ import (
 // OfferFlags represents a set of flags that need the product
 type OfferFlags struct {
 	*flag.FlagSet
-	setFlags struct {
-		website       string
-		category      string
-		title         string
-		originalPrice string
-		discounted    string
-		percentage    string
-		offerUrl      string
-		offerDay      string
-		available     string
-		delivery      string
-		urls          []string
-	}
+	query  application.OfferQuery
 	finder ports.OfferFinder[application.OfferQuery]
 }
 
-// NewProductFlags initializes an instance of ProductsFlags all its flags assigned
-func NewProductFlags(finder application.OfferFinder) *OfferFlags {
+// NewOfferFlags initializes an instance of OfferFlags all its flags assigned
+func NewOfferFlags(finder application.OfferFinder) *OfferFlags {
 	offer := &OfferFlags{
 		FlagSet: flag.NewFlagSet("website", flag.ExitOnError),
 		finder:  &finder,
@@ -35,16 +23,19 @@ func NewProductFlags(finder application.OfferFinder) *OfferFlags {
 
 	website := offer.FlagSet
 
-	website.Var(Validate{&offer.setFlags.website}, "website", "name of the website")
-	website.Var(Validate{&offer.setFlags.category}, "category", "name of the website category")
-	website.Var(Validate{&offer.setFlags.title}, "title", "query selector to search for product title")
-	website.Var(Validate{&offer.setFlags.originalPrice}, "original-price", "query selector to search the original price of the product")
-	website.Var(Validate{&offer.setFlags.discounted}, "discounted", "query selector to search for the product discounted price")
-	website.Var(Validate{&offer.setFlags.percentage}, "percentage", "query selector to search for product percentage")
-	website.Var(Validate{&offer.setFlags.offerUrl}, "offer-url", "query selector to search for the product offer url")
-	website.Var(Validate{&offer.setFlags.offerDay}, "offer-day", "query selector to search if it is the product offer of the day")
-	website.Var(Validate{&offer.setFlags.available}, "available", "query selector to search for product availability")
-	website.Var(Validate{&offer.setFlags.delivery}, "delivery", "query selector to search out if the product is free for delivery ")
+	website.Var(Validate{&offer.query.Website}, "website", "name of the website")
+	website.Var(Validate{&offer.query.Container}, "container-offers", "query selector indicating the container of the offer set")
+	website.Var(Validate{&offer.query.Item}, "item-offer", "query selector indicating the offer item")
+	website.Var(Validate{&offer.query.CategoryId}, "category-id", "id of the website category")
+	website.Var(Validate{&offer.query.Category}, "category", "name of the website category")
+	website.Var(Validate{&offer.query.Title}, "title", "query selector to search for offer title")
+	website.Var(Validate{&offer.query.OriginalPrice}, "original-price", "query selector to search the original price of the offer")
+	website.Var(Validate{&offer.query.Discounted}, "discounted", "query selector to search for the offer discounted price")
+	website.Var(Validate{&offer.query.Percentage}, "percentage", "query selector to search for offer percentage")
+	website.Var(Validate{&offer.query.OfferUrl}, "offer-url", "query selector to search for the offer url 'href'")
+	website.Var(Validate{&offer.query.OfferDay}, "offer-day", "query selector to search if it is the offer of the day")
+	website.Var(Validate{&offer.query.Available}, "available", "query selector to search for offer availability")
+	website.Var(Validate{&offer.query.Delivery}, "delivery", "query selector to search out if the offer is free for delivery ")
 
 	if err := offer.Parse(os.Args[2:]); err != nil {
 		panic(err)
@@ -54,30 +45,17 @@ func NewProductFlags(finder application.OfferFinder) *OfferFlags {
 }
 
 // Name method that returns the name of the main command
-func (p *OfferFlags) Name() string {
-	return p.FlagSet.Name()
+func (o *OfferFlags) Name() string {
+	return o.FlagSet.Name()
 }
 
 // Parse method that initializes the whole set of flags of the main command
-func (p *OfferFlags) Parse(args []string) error {
-	return p.FlagSet.Parse(args)
+func (o *OfferFlags) Parse(args []string) error {
+	return o.FlagSet.Parse(args)
 }
 
 // Run method that executes the task with the values of each flag
-func (p *OfferFlags) Run() error {
-	query := application.OfferQuery{
-		Website:       p.setFlags.website,
-		Category:      p.setFlags.category,
-		Title:         p.setFlags.title,
-		OriginalPrice: p.setFlags.originalPrice,
-		Discounted:    p.setFlags.discounted,
-		Percentage:    p.setFlags.percentage,
-		OfferUrl:      p.setFlags.offerUrl,
-		OfferDay:      p.setFlags.offerDay,
-		Available:     p.setFlags.available,
-		Delivery:      p.setFlags.delivery,
-		Urls:          p.FlagSet.Args(),
-	}
-
-	return p.finder.Find(query)
+func (o *OfferFlags) Run() error {
+	o.query.Urls = o.FlagSet.Args()
+	return o.finder.Find(o.query)
 }
