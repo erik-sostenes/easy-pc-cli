@@ -9,6 +9,10 @@ import (
 	"github.com/erik-sostenes/easy-pc-cli/internal/context/offer/infrastructure/input/cli"
 	"github.com/erik-sostenes/easy-pc-cli/internal/context/offer/infrastructure/output/http"
 	"github.com/erik-sostenes/easy-pc-cli/internal/context/offer/infrastructure/output/scraping"
+	a2 "github.com/erik-sostenes/easy-pc-cli/internal/context/offer_details/business/application"
+	c2 "github.com/erik-sostenes/easy-pc-cli/internal/context/offer_details/infrastructure/input/cli"
+	http2 "github.com/erik-sostenes/easy-pc-cli/internal/context/offer_details/infrastructure/output/http"
+	s2 "github.com/erik-sostenes/easy-pc-cli/internal/context/offer_details/infrastructure/output/scraping"
 	"github.com/erik-sostenes/easy-pc-cli/internal/context/shared/infrastruture/colly"
 	"os"
 )
@@ -30,16 +34,16 @@ func Execute(args []string) error {
 		return errors.New("website subcommands were expected")
 	}
 
-	offerFinder := application.NewOfferFinder(
-		scraping.NewOfferScraper(*colly.NewCollyClient()),
-		http.Requester{},
-	)
+	colly := *colly.NewCollyClient()
 
 	switch os.Args[1] {
-	case "website":
+	case "offers":
+		offerFinder := application.NewOfferFinder(scraping.NewOfferScraper(colly), http.Requester{})
 		return cli.NewOfferFlags(offerFinder).Run()
+	case "offer-details":
+		offerDetails := a2.NewOfferDetailsFinder(s2.NewOfferDetailsScraper(colly), http2.Requester{})
+		return c2.NewOfferDetailsFlags(offerDetails).Run()
 	default:
 		return fmt.Errorf("%s command no fount", os.Args[1])
 	}
-	return nil
 }
