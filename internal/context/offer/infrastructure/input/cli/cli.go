@@ -17,25 +17,15 @@ type OfferFlags struct {
 // NewOfferFlags initializes an instance of OfferFlags all its flags assigned
 func NewOfferFlags(finder application.OfferFinder) *OfferFlags {
 	offer := &OfferFlags{
-		FlagSet: flag.NewFlagSet("website", flag.ExitOnError),
+		FlagSet: flag.NewFlagSet("offers", flag.ExitOnError),
 		finder:  &finder,
 	}
 
-	website := offer.FlagSet
+	command := offer.FlagSet
 
-	website.Var(Validate{&offer.query.Website}, "website", "name of the website")
-	website.Var(Validate{&offer.query.Container}, "container-offers", "query selector indicating the container of the offer set")
-	website.Var(Validate{&offer.query.Item}, "item-offer", "query selector indicating the offer item")
-	website.Var(Validate{&offer.query.CategoryId}, "category-id", "id of the website category")
-	website.Var(Validate{&offer.query.Category}, "category", "name of the website category")
-	website.Var(Validate{&offer.query.Title}, "title", "query selector to search for offer title")
-	website.Var(Validate{&offer.query.OriginalPrice}, "original-price", "query selector to search the original price of the offer")
-	website.Var(Validate{&offer.query.Discounted}, "discounted", "query selector to search for the offer discounted price")
-	website.Var(Validate{&offer.query.Percentage}, "percentage", "query selector to search for offer percentage")
-	website.Var(Validate{&offer.query.OfferUrl}, "offer-url", "query selector to search for the offer url 'href'")
-	website.Var(Validate{&offer.query.OfferDay}, "offer-day", "query selector to search if it is the offer of the day")
-	website.Var(Validate{&offer.query.Available}, "available", "query selector to search for offer availability")
-	website.Var(Validate{&offer.query.Delivery}, "delivery", "query selector to search out if the offer is free for delivery ")
+	command.Var(Validate{&offer.query.Website}, "website", "inject the name of the website")
+	command.Var(Validate{&offer.query.CategoryId}, "category-id", "inject the category identifier")
+	command.Var(Validate{&offer.query.Category}, "category", "inject the name of the category")
 
 	if err := offer.Parse(os.Args[2:]); err != nil {
 		panic(err)

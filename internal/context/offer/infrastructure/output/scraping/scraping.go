@@ -4,6 +4,7 @@ import (
 	"github.com/erik-sostenes/easy-pc-cli/internal/context/offer/business/domain"
 	"github.com/erik-sostenes/easy-pc-cli/internal/context/offer/business/domain/ports"
 	"github.com/gocolly/colly"
+	"github.com/google/uuid"
 	"strconv"
 	"strings"
 )
@@ -23,34 +24,36 @@ func NewOfferScraper(collector colly.Collector) ports.OfferScraper {
 }
 
 // Scraping method that searches for an offer by scraping
-func (o *offerScraper) Scraping(query map[string]string, urls []string) (offers domain.Offers, err error) {
-	o.OnHTML(query["container"], func(htmlElement *colly.HTMLElement) {
-		htmlElement.ForEach(query["item"], func(_ int, h *colly.HTMLElement) {
-			originalPrice, _ := strconv.ParseFloat(h.ChildText(query["original_price"]), 64)
-			discountPrice, _ := strconv.ParseFloat(h.ChildText(query["discounted"]), 64)
+func (o *offerScraper) Scraping(values map[string]string, urls []string) (offers domain.Offers, err error) {
+	o.OnHTML(".items_container", func(htmlElement *colly.HTMLElement) {
+		htmlElement.ForEach("li", func(_ int, h *colly.HTMLElement) {
+			originalPrice, _ := strconv.ParseFloat(h.ChildText(".andes-money-amount-combo__previous-value > .andes-money-amount__fraction"), 64)
+			discountPrice, _ := strconv.ParseFloat(h.ChildText(".andes-money-amount--cents-superscript > .andes-money-amount__fraction"), 64)
 
 			var isOfferDay bool
-			if strings.TrimSpace(h.ChildText(query["offer_day"])) != "" {
+			if strings.TrimSpace(h.ChildText(".promotion-item__today-offer-text")) != "" {
 				isOfferDay = true
 			}
 
 			var isAvailable bool
-			if strings.TrimSpace(h.ChildText(query["available"])) == "" {
+			if strings.TrimSpace(h.ChildText(".promotion-item__item-lightning-status > span")) == "" {
 				isAvailable = true
 			}
-
+			u, _ := uuid.NewRandom()
 			offer := domain.Offer{
-				Title:              h.ChildText(query["title"]),
+				Website:            values["website"],
+				Id:                 u.String(),
+				Title:              h.ChildText(".promotion-item__title"),
 				OriginalPrice:      originalPrice,
 				DiscountPrice:      discountPrice,
-				DiscountPercentage: h.ChildText(query["percentage"]),
-				OfferUrl:           h.ChildAttr(query["offer_url"], "href"),
+				DiscountPercentage: h.ChildText("p[class=andes-money-amount-combo] > span[class=andes-money-amount-amount__discount]"),
+				OfferUrl:           h.ChildAttr(".promotion-item__link-container", "href"),
 				IsOfferDay:         isOfferDay,
 				IsAvailable:        isAvailable,
-				DeliveryIsFree:     h.ChildText(query["delivery"]),
+				DeliveryIsFree:     h.ChildText(".promotion-item__next-day-text"),
 				Category: domain.Category{
-					Id:   query["category_id"],
-					Name: query["category"],
+					Id:   values["category_id"],
+					Name: values["category"],
 				},
 			}
 

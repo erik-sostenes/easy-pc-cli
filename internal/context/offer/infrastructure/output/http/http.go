@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var url = "http://localhost:5000/api/v1/offer"
+var url = "http://localhost:5000/v1/api/offers"
 
 var _ ports.HttpRequester = Requester{}
 

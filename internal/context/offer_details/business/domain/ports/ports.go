@@ -16,7 +16,7 @@ type (
 
 	// OfferDetailsScraper interface that represents an output port that defines the contracts of how the adapters communicate
 	OfferDetailsScraper interface {
-		// Scraping method that receives a map with query selectors to search the data of an offer by colly
+		// Scraping method that receives a data to search the data of an offer by colly
 		Scraping(string, string) (domain.OfferDetails, error)
 	}
 

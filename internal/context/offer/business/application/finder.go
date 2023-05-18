@@ -11,20 +11,10 @@ import (
 var _ query.Query = &OfferQuery{}
 
 type OfferQuery struct {
-	Website       string
-	Container     string
-	Item          string
-	CategoryId    string
-	Category      string
-	Title         string
-	OriginalPrice string
-	Discounted    string
-	Percentage    string
-	OfferUrl      string
-	OfferDay      string
-	Available     string
-	Delivery      string
-	Urls          []string
+	Website    string
+	CategoryId string
+	Category   string
+	Urls       []string
 }
 
 // QueryId method that returns the identifier of OfferQuery
@@ -38,14 +28,14 @@ var _ ports.OfferFinder[OfferQuery] = &OfferFinder{}
 type OfferFinder struct {
 	ports.OfferScraper
 	ports.HttpRequester
-	queries map[string]string
+	values map[string]string
 }
 
 func NewOfferFinder(scraper ports.OfferScraper, requester ports.HttpRequester) OfferFinder {
 	return OfferFinder{
 		OfferScraper:  scraper,
 		HttpRequester: requester,
-		queries:       make(map[string]string),
+		values:        make(map[string]string),
 	}
 }
 
@@ -55,21 +45,11 @@ func (o *OfferFinder) Find(query OfferQuery) error {
 		return err
 	}
 
-	o.queries["website"] = query.Website
-	o.queries["container"] = query.Container
-	o.queries["item"] = query.Item
-	o.queries["category_id"] = query.CategoryId
-	o.queries["category"] = query.Category
-	o.queries["title"] = query.Title
-	o.queries["original_price"] = query.OriginalPrice
-	o.queries["discounted"] = query.Discounted
-	o.queries["percentage"] = query.Percentage
-	o.queries["offer_url"] = query.OfferUrl
-	o.queries["offer_day"] = query.OfferDay
-	o.queries["available"] = query.Available
-	o.queries["delivery"] = query.Delivery
+	o.values["website"] = query.Website
+	o.values["category_id"] = query.CategoryId
+	o.values["category"] = query.Category
 
-	offers, err := o.OfferScraper.Scraping(o.queries, query.Urls)
+	offers, err := o.OfferScraper.Scraping(o.values, query.Urls)
 	if err != nil {
 		return err
 	}
@@ -80,7 +60,7 @@ func (o *OfferFinder) Find(query OfferQuery) error {
 func (o *OfferFinder) ensureUrlIsValid(urls []string) error {
 	for _, v := range urls {
 		if _, err := url.ParseRequestURI(v); err != nil {
-			return fmt.Errorf("offer v %s is not valid", v)
+			return fmt.Errorf("offer %s is not valid", v)
 		}
 	}
 	return nil

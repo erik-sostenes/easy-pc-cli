@@ -1,28 +1,15 @@
 package domain
 
 type (
-	Sale struct {
-		Days   string
-		Amount string
-	}
-
 	Category struct {
 		Id   string
 		Name string
 	}
 
-	Rating struct {
-		Rating float32
-		Amount float32
-	}
-
-	RatingOpinion struct {
-		Rating string
-		Amount float64
-	}
-
 	// Offer represents an object domain
 	Offer struct {
+		Website            string
+		Id                 string
 		Title              string
 		OriginalPrice      float64
 		DiscountPrice      float64
@@ -31,9 +18,6 @@ type (
 		IsOfferDay         bool
 		IsAvailable        bool
 		DeliveryIsFree     string
-		Sale               Sale
-		Rating             Rating
-		RatingOpinions     []RatingOpinion
 		Opinions           []string
 		Category           Category
 	}
